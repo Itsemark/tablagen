@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iránytábla Generátor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="html2canvas.js"></script>
+    <style>
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .table-image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+            padding: 10px;
+        }
+
+        .table-image-container img {
+            transition: filter 0.5s ease;
+            cursor: pointer;
+        }
+
+        .table-image-container img.grayscale {
+            filter: grayscale(100%);
+        }
+
+        .download-icon {
+            position: absolute;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 50%;
+            display: none;
+        }
+        
+        .delete-icon {
+            position: absolute;
+            cursor: pointer;
+            font-size: 24px;
+            color: black;
+            padding: 10px;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .download-icon {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .delete-icon {
+            top: 10px;
+            right: 15px;
+        }
+
+        .table-image-container:hover .download-icon, 
+        .table-image-container:hover .delete-icon {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            color: gray;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 24px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            padding: 10px;
+        }
+
+        .dark-mode {
+            background-color: #2c2c2c;
+            color: #f0f0f0;
+        }
+
+        .dark-mode .footer {
+            color: #aaa;
+        }
+
+        .dark-mode .theme-toggle {
+            background-color: #444;
+            color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Iránytábla Generátor</h1>
+        <form id="generator-form" onsubmit="createRectangle(event)">
+            <div class="form-group centered">
+                <label for="tableNumber">Járatszám:</label>
+                <input type="text" id="tableNumber" placeholder="Pl. 101A">
+            </div>
+            <div class="form-group centered">
+                <label for="tableText">Útvonal:</label>
+                <input type="text" id="tableText" placeholder="Pl. Budapest">
+            </div>
+            <div class="form-group">
+                <label>Kivitel:</label>
+                <div class="options">
+                    <label><input type="radio" name="busType" value="local" checked> Helyi</label>
+                    <label><input type="radio" name="busType" value="intercity"> Helyközi</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="design">Tábla Kialakítása:</label>
+                <select id="design">
+                    <option value="classic">Klasszikus</option>
+                    <option value="modern">Modern</option>
+                    <option value="minimal">Minimalista</option>
+                </select>
+            </div>
+            <button type="submit">Generálás</button>
+        </form>
+        <div class="footer">
+            <p>&copy; 2024 Iránytábla Generátor</p>
+            <p>Verzió: 2.0.0</p>
+            <p>Készítette: <a href="https://github.com/Itsemark" target="_blank">e.mark</a></p>
+        </div>
+    </div>
+    <div id="rectangleContainer" style="display: flex; justify-content: center; flex-wrap: wrap;">
+        <!-- Generated signs appear below this -->
+    </div>
+
+    <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</div>
+
+    <script>
+        function createRectangle(event) {
+            event.preventDefault();
+
+            var tableNumber = document.getElementById("tableNumber").value;
+            var tableText = document.getElementById("tableText").value;
+            var busType = document.querySelector('input[name="busType"]:checked').value;
+
+            if (tableNumber === "" || tableText === "") {
+                alert("Minden mező kitöltése kötelező!");
+                return false;
+            }
+
+            if (tableNumber.length > 4) {
+                alert("A tábla száma maximum 4 karakter lehet!");
+                return false;
+            }
+
+            var rectangle = document.createElement("div");
+            rectangle.className = "tábla_alap";
+
+            var innerRectangle = document.createElement("div");
+            innerRectangle.className = "járatsz_alap";
+
+            var textElement = document.createElement("span");
+            textElement.textContent = tableNumber;
+            innerRectangle.appendChild(textElement);
+
+            var textContainer = document.createElement("div");
+            textContainer.className = "tábla_szövege";
+            textContainer.textContent = tableText;
+
+            // set lenght based on the lenght of the line
+            if (tableNumber.length === 3) {
+                innerRectangle.style.width = "260px";
+                textContainer.style.left = "315px";
+            } else if (tableNumber.length === 4) {
+                innerRectangle.style.width = "325px";
+                textContainer.style.left = "380px";
+            }
+
+            // Színek beállítása a busz típus alapján
+            if (busType === "local") {
+                innerRectangle.style.backgroundColor = "#173841";
+                textElement.style.color = "white";
+            } else if (busType === "intercity") {
+                innerRectangle.style.backgroundColor = "#FBB913";
+                textElement.style.color = "#173841";
+            }
+
+            rectangle.appendChild(innerRectangle);
+            rectangle.appendChild(textContainer);
+
+            // add invisible temporary elem to DOM
+            rectangle.style.position = "absolute";
+            rectangle.style.top = "-9999px";
+            document.body.appendChild(rectangle);
+
+            // Convert to image
+            convertToImage(rectangle);
+
+            return true;
+        }
+
+        function convertToImage(element) {
+            html2canvas(element, {
+                scale: 2
+            }).then(function(canvas) {
+                var generatedImage = new Image();
+                generatedImage.src = canvas.toDataURL();
+
+                generatedImage.onload = function() {
+                    var imageWidth = generatedImage.width;
+                    var imageHeight = generatedImage.height;
+                    var aspectRatio = imageWidth / imageHeight;
+                    var containerWidth = element.offsetWidth;
+                    var containerHeight = element.offsetHeight;
+
+                    var targetWidth, targetHeight;
+
+                    if (imageWidth > containerWidth || imageHeight > containerHeight) {
+                        if (containerWidth / containerHeight > aspectRatio) {
+                            targetHeight = containerHeight;
+                            targetWidth = targetHeight * aspectRatio;
+                        } else {
+                            targetWidth = containerWidth;
+                            targetHeight = targetWidth / aspectRatio;
+                        }
+                    } else {
+                        targetWidth = imageWidth;
+                        targetHeight = imageHeight;
+                    }
+
+                    var imageElement = document.createElement("img");
+                    imageElement.src = generatedImage.src;
+                    imageElement.width = targetWidth;
+                    imageElement.height = targetHeight;
+
+                    var imageContainer = document.createElement("div");
+                    imageContainer.className = "table-image-container";
+                    imageContainer.appendChild(imageElement);
+
+                    var downloadIcon = document.createElement("div");
+                    downloadIcon.className = "download-icon";
+                    downloadIcon.innerHTML = "&#x1F4BE;"; // Floppy disk icon
+                    downloadIcon.onclick = function(event) {
+                        event.stopPropagation();
+                        downloadImage(generatedImage.src);
+                    };
+                    imageContainer.appendChild(downloadIcon);
+
+                    var deleteIcon = document.createElement("div");
+                    deleteIcon.className = "delete-icon";
+                    deleteIcon.innerHTML = "&#x2716;"; // X icon
+                    deleteIcon.onclick = function(event) {
+                        event.stopPropagation();
+                        imageContainer.remove();
+                    };
+                    imageContainer.appendChild(deleteIcon);
+
+                    var displayContainer = document.getElementById("rectangleContainer");
+                    displayContainer.appendChild(imageContainer);
+
+                    // Temporarly remove from DOM
+                    document.body.removeChild(element);
+                };
+            });
+        }
+
+        function downloadImage(dataUrl) {
+            var link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'iranytabla.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function toggleTheme() {
+            var body = document.body;
+            var themeToggle = document.getElementById("themeToggle");
+            if (body.classList.contains("dark-mode")) {
+                body.classList.remove("dark-mode");
+                themeToggle.innerHTML = "🌙";
+            } else {
+                body.classList.add("dark-mode");
+                themeToggle.innerHTML = "☀️";
+            }
+        }
+    </script>
+</body>
+</html>
